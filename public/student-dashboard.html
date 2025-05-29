@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="student-dashboard.css"> <!-- Linked Corrected CSS -->
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Exam Platform</div>
+        <ul class="nav-links">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Results</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><button onclick="logout()">Logout</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h2>Welcome, Student!</h2>
+        <p>Here are your available tests:</p>
+
+        <!-- Test Section -->
+        <div id="test-container" class="test-container"></div>
+    </div>
+
+    <script src="student-dashboard.js"></script> <!-- Linked JS -->
+</body>
+
+</html>

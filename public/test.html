@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2em;
+        }
+
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background-color: #e9ecef;
+        }
+
+        .option.selected {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .submit-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="timer" id="timer">Time Remaining: <span id="time">00:00</span></div>
+    <div class="container">
+        <h1 id="test-title">Loading Test...</h1>
+        <div id="questions-container"></div>
+        <button class="submit-btn" onclick="submitTest()">Submit Test</button>
+    </div>
+
+    <script>
+        let testData = null;
+        let timeLeft = 0;
+        let timerInterval = null;
+        let answers = {};
+
+        // Get test ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const testId = urlParams.get('testId');
+
+        // Fetch test data
+        async function fetchTest() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/get-test/${testId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch test');
+                }
+
+                testData = await response.json();
+                document.getElementById('test-title').textContent = testData.subject;
+                timeLeft = testData.duration * 60; // Convert minutes to seconds
+                startTimer();
+                displayQuestions();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load test. Please try again.');
+            }
+        }
+
+        // Display questions
+        function displayQuestions() {
+            const container = document.getElementById('questions-container');
+            testData.questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <h3>Question ${index + 1}</h3>
+                    <p>${question.text}</p>
+                    <div class="options">
+                        ${question.options.map((option, optIndex) => `
+                            <div class="option" onclick="selectOption(${index}, ${optIndex})">
+                                ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        // Select option
+        function selectOption(questionIndex, optionIndex) {
+            const options = document.querySelectorAll(`.question:nth-child(${questionIndex + 1}) .option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[optionIndex].classList.add('selected');
+            answers[questionIndex] = optionIndex;
+        }
+
+        // Timer functionality
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 300) { // 5 minutes warning
+                    document.getElementById('timer').classList.add('warning');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('time').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Submit test
+        async function submitTest() {
+            if (Object.keys(answers).length < testData.questions.length) {
+                if (!confirm('You have not answered all questions. Are you sure you want to submit?')) {
+                    return;
+                }
+            }
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/submit-test', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        testId,
+                        answers
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit test');
+                }
+
+                const result = await response.json();
+                alert(`Test submitted successfully! Your score: ${result.score}`);
+                window.location.href = 'student-dashboard.html';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to submit test. Please try again.');
+            }
+        }
+
+        // Initialize
+        fetchTest();
+    </script>
+</body>
+
+</html>

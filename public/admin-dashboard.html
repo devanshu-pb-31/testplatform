@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+
+<body>
+    <!--  Navbar -->
+    <nav class="navbar">
+        <div class="logo">Admin Panel</div>
+        <ul class="nav-links">
+            <li><a href="#">Manage Tests</a></li>
+            <li><a href="#">View Results</a></li>
+            <li><a href="#">User Management</a></li>
+            <li><a href="#">Exam Analytics</a></li>
+            <li><button onclick="logout()">Logout</button></li>
+        </ul>
+    </nav>
+
+    <!--  Main Content -->
+    <div class="container">
+        <h2>Welcome, Admin!</h2>
+        <p>Manage tests, view results, and monitor student performance.</p>
+
+        <!--  Manage Tests Section -->
+        <section id="manage-tests">
+            <h3>Manage Tests</h3>
+            <button onclick="toggleTestForm()">Add New Test</button>
+            <div id="test-form-container" class="hidden">
+                <form id="test-form" onsubmit="handleTestSubmit(event)">
+                    <label>Subject:</label>
+                    <input type="text" id="subject" required>
+                    <label>Duration (minutes):</label>
+                    <input type="number" id="duration" required>
+                    <div id="questions-container">
+                        <div class="question-block">
+                            <label>Question 1:</label>
+                            <input type="text" class="question-text" required>
+                            <div class="options-container">
+                                <input type="text" class="option" placeholder="Option 1" required>
+                                <input type="text" class="option" placeholder="Option 2" required>
+                                <input type="text" class="option" placeholder="Option 3" required>
+                                <input type="text" class="option" placeholder="Option 4" required>
+                            </div>
+                            <label>Correct Answer (1-4):</label>
+                            <input type="number" class="correct-answer" min="1" max="4" required>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addQuestion()">Add Another Question</button>
+                    <button type="submit">Save Test</button>
+                </form>
+            </div>
+            <div id="test-list"></div>
+        </section>
+
+        <!--  User Management Section -->
+        <section id="user-management">
+            <h3>Manage Users</h3>
+            <button onclick="toggleUserForm()">Add New User</button>
+            <div id="user-form-container" class="hidden">
+                <form id="user-form">
+                    <label>Username:</label>
+                    <input type="text" id="username" required>
+                    <label>Password:</label>
+                    <input type="password" id="password" required>
+                    <label>Role:</label>
+                    <select id="role">
+                        <option value="Student">Student</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                    <button type="submit">Create User</button>
+                </form>
+            </div>
+            <div id="user-list"></div>
+        </section>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>
